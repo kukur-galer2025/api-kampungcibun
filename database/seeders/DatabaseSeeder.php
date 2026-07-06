@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         // Admin User
         User::create([
             'name' => 'Admin Cibun',
-            'email' => 'admin@cibuntourism.id',
+            'email' => 'admin@cibun.com',
             'password' => Hash::make('password123')
         ]);
 
