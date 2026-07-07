@@ -42,6 +42,10 @@ class UploadApiController extends Controller
             $data['image_url'] = '/storage/' . $path;
         }
 
+        if ($model === 'news' && empty($data['excerpt']) && !empty($data['content'])) {
+            $data['excerpt'] = Str::limit(strip_tags($data['content']), 150);
+        }
+
         $instance = $this->getModel($model)->create($data);
         return response()->json($instance, 201);
     }
@@ -71,6 +75,10 @@ class UploadApiController extends Controller
             $folder = $this->getFolder($model);
             $path = $request->file('image')->store($folder, 'public');
             $data['image_url'] = '/storage/' . $path;
+        }
+
+        if ($model === 'news' && empty($data['excerpt']) && !empty($data['content'])) {
+            $data['excerpt'] = Str::limit(strip_tags($data['content']), 150);
         }
 
         $instance->update($data);
