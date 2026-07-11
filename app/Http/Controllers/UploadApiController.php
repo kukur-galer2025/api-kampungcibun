@@ -43,7 +43,8 @@ class UploadApiController extends Controller
         }
 
         if ($model === 'news' && empty($data['excerpt']) && !empty($data['content'])) {
-            $data['excerpt'] = Str::limit(strip_tags($data['content']), 150);
+            $clean = preg_replace('/\s+/', ' ', trim(strip_tags(html_entity_decode($data['content'], ENT_QUOTES, 'UTF-8'))));
+            $data['excerpt'] = Str::limit($clean, 150);
         }
 
         $instance = $this->getModel($model)->create($data);
@@ -78,7 +79,8 @@ class UploadApiController extends Controller
         }
 
         if ($model === 'news' && empty($data['excerpt']) && !empty($data['content'])) {
-            $data['excerpt'] = Str::limit(strip_tags($data['content']), 150);
+            $clean = preg_replace('/\s+/', ' ', trim(strip_tags(html_entity_decode($data['content'], ENT_QUOTES, 'UTF-8'))));
+            $data['excerpt'] = Str::limit($clean, 150);
         }
 
         $instance->update($data);
