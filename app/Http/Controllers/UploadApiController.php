@@ -106,8 +106,12 @@ class UploadApiController extends Controller
             $data['image_url'] = '/storage/' . $path;
         }
 
-        if ($model === 'news' && empty($data['excerpt']) && !empty($data['content'])) {
-            $data['excerpt'] = Str::limit($this->cleanHtml($data['content']), 150);
+        if ($model === 'news') {
+            if (!empty($data['content'])) {
+                $data['excerpt'] = Str::limit($this->cleanHtml($data['content']), 150);
+            } else {
+                $data['excerpt'] = '';
+            }
         }
 
         $instance->update($data);
