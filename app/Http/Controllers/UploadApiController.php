@@ -20,6 +20,35 @@ class UploadApiController extends Controller
         return Str::plural(Str::lower($model));
     }
 
+    /**
+     * Strip ALL HTML (tags + entities) from rich text editor content.
+     * Handles: <strong>, <em>, <b>, <i>, <u>, <s>, <br>, <p>, <div>,
+     * <h1>-<h6>, <ul>, <ol>, <li>, <blockquote>, <a>, <span>, etc.
+     * Also decodes &nbsp;, &amp;, &lt;, &gt;, &quot; and all other entities.
+     */
+    private function cleanHtml(?string $html): string
+    {
+        if (!$html) return '';
+
+        // 1. Decode all HTML entities (&nbsp; -> space, &amp; -> &, etc.)
+        $text = html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        // 2. Insert space before closing block-level tags so words don't merge
+        //    e.g. "<p>Hello</p><p>World</p>" -> "Hello World" instead of "HelloWorld"
+        $text = preg_replace('/<\/(p|div|br|h[1-6]|li|blockquote|tr|td|th)\s*>/i', ' ', $text);
+
+        // 3. Replace <br>, <br/>, <br /> with space
+        $text = preg_replace('/<br\s*\/?>/i', ' ', $text);
+
+        // 4. Strip ALL remaining HTML tags (<strong>, <em>, <a>, <span>, etc.)
+        $text = strip_tags($text);
+
+        // 5. Normalize whitespace (multiple spaces/tabs/newlines -> single space)
+        $text = preg_replace('/\s+/', ' ', $text);
+
+        return trim($text);
+    }
+
     public function store(Request $request, $model)
     {
         $request->validate([
@@ -43,8 +72,7 @@ class UploadApiController extends Controller
         }
 
         if ($model === 'news' && empty($data['excerpt']) && !empty($data['content'])) {
-            $clean = preg_replace('/\s+/', ' ', trim(strip_tags(html_entity_decode($data['content'], ENT_QUOTES, 'UTF-8'))));
-            $data['excerpt'] = Str::limit($clean, 150);
+            $data['excerpt'] = Str::limit($this->cleanHtml($data['content']), 150);
         }
 
         $instance = $this->getModel($model)->create($data);
@@ -79,8 +107,7 @@ class UploadApiController extends Controller
         }
 
         if ($model === 'news' && empty($data['excerpt']) && !empty($data['content'])) {
-            $clean = preg_replace('/\s+/', ' ', trim(strip_tags(html_entity_decode($data['content'], ENT_QUOTES, 'UTF-8'))));
-            $data['excerpt'] = Str::limit($clean, 150);
+            $data['excerpt'] = Str::limit($this->cleanHtml($data['content']), 150);
         }
 
         $instance->update($data);
